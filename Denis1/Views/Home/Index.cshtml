@@ -1,0 +1,152 @@
+﻿
+@{
+    ViewData["Title"] = "Home page";
+}
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEBSITE</title>
+    <link rel="stylesheet" href="~/css/site.css">
+</head>
+
+<div class="banner">
+    <div class="navbar">
+        <img src="~/images/logo.png" class="logo" alt="Логотип" />
+        <ul>
+            <li><a href="#" onclick="openModal('user')">Пользователь</a></li>
+            <li><a href="#" onclick="openModal('employer')">Работодатель</a></li>
+            <li><a href="#" onclick="openModal('job')">Вакансия</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1>Добро пожаловать на биржу труда</h1>
+        <p>Здесь вы можете зарегистрироваться как соискатель, работодатель или разместить вакансию.</p>
+        <div>
+            <button onclick="openModal('user')"><span></span>Регистрация</button>
+            <button onclick="openModal('employer')"><span></span>Работодатель</button>
+            <button onclick="openModal('job')"><span></span>Добавить вакансию</button>
+        </div>
+    </div>
+</div>
+
+<!-- 🔹 Модальные окна -->
+<div id="modal" class="modal">
+    <div class="modal-content" id="modalContent">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+    </div>
+</div>
+
+<script>
+    const apiUrl = "https://localhost:7282/api";
+
+    // 🔹 Открытие модалки
+    function openModal(type) {
+        const modal = document.getElementById("modal");
+        const content = document.getElementById("modalContent");
+        modal.style.display = "flex";
+
+        if (type === 'user') {
+            content.innerHTML = `
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h2>Регистрация пользователя</h2>
+                <form onsubmit="registerUser(event)">
+                    <input type="text" id="userEmail" placeholder="Email" required />
+                    <input type="password" id="userPassword" placeholder="Пароль" required />
+                    <input type="text" id="userLastName" placeholder="Имя / Фамилия" required />
+                    <input type="tel" id="userPhone" placeholder="Телефон" required />
+                    <button type="submit">Зарегистрироваться</button>
+                </form>`;
+        }
+        else if (type === 'employer') {
+            content.innerHTML = `
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h2>Регистрация работодателя</h2>
+                <form onsubmit="registerEmployer(event)">
+                    <input type="text" id="companyName" placeholder="Название компании" required />
+                    <input type="text" id="contactPerson" placeholder="Контактное лицо" required />
+                    <input type="email" id="employerEmail" placeholder="Email" required />
+                    <input type="tel" id="employerPhone" placeholder="Телефон" required />
+                    <input type="password" id="employerPassword" placeholder="Пароль" required />
+                    <button type="submit">Создать аккаунт</button>
+                </form>`;
+        }
+        else if (type === 'job') {
+            content.innerHTML = `
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h2>Разместить вакансию</h2>
+                <form onsubmit="createJob(event)">
+                    <input type="text" id="jobTitle" placeholder="Название вакансии" required />
+                    <input type="text" id="jobSpecialty" placeholder="Специальность" required />
+                    <textarea id="jobDescription" placeholder="Описание вакансии" rows="4" style="width:90%; margin:10px 0; border-radius:5px; border:1px solid #ccc;"></textarea>
+                    <input type="text" id="employerId" placeholder="ID работодателя" required />
+                    <button type="submit">Добавить вакансию</button>
+                </form>`;
+        }
+    }
+
+    function closeModal() {
+        document.getElementById("modal").style.display = "none";
+    }
+
+    window.onclick = function (e) {
+        if (e.target.id === "modal") closeModal();
+    };
+
+    // 🔹 Регистрация пользователя
+    async function registerUser(e) {
+        e.preventDefault();
+        const user = {
+            email: document.getElementById('userEmail').value,
+            password: document.getElementById('userPassword').value,
+            lastName: document.getElementById('userLastName').value,
+            phone: document.getElementById('userPhone').value
+        };
+        const res = await fetch(`${apiUrl}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(user)
+        });
+        alert(res.ok ? "Регистрация успешна!" : "Ошибка регистрации");
+    }
+
+    // 🔹 Регистрация работодателя
+    async function registerEmployer(e) {
+        e.preventDefault();
+        const employer = {
+            companyName: document.getElementById('companyName').value,
+            contactPerson: document.getElementById('contactPerson').value,
+            email: document.getElementById('employerEmail').value,
+            phone: document.getElementById('employerPhone').value,
+            passwordHash: document.getElementById('employerPassword').value
+        };
+        const res = await fetch(`${apiUrl}/employers/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(employer)
+        });
+        alert(res.ok ? "Работодатель зарегистрирован!" : "Ошибка при регистрации работодателя");
+    }
+
+    // 🔹 Добавление вакансии
+    async function createJob(e) {
+        e.preventDefault();
+        const job = {
+            title: document.getElementById('jobTitle').value,
+            specialty: document.getElementById('jobSpecialty').value,
+            description: document.getElementById('jobDescription').value,
+            employerId: document.getElementById('employerId').value
+        };
+        const res = await fetch(`${apiUrl}/jobs/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(job)
+        });
+        alert(res.ok ? "Вакансия успешно добавлена!" : "Ошибка при добавлении вакансии");
+    }
+</script>
